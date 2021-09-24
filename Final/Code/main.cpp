@@ -1,118 +1,176 @@
- #include<stdio.h>
-#include<string.h>
+ #include<bits/stdc++.h>
+using namespace std;
 
-int i,j,k,l,m,n=0,o,p,nv,z=0,t,x=0;
-char str[10],temp[20],temp2[20],temp3[20];
+vector<string>sp,ke,ri;
+map<string,string>mp,mpp;
+string ans;
 
-struct prod
-{
-    char lhs[10],rhs[10][10];
-    int n;
-}pro[10];
-
-void findter()
-{
-    for(k=0;k<n;k++)
-    {
-        if(temp[i]==pro[k].lhs[0])
-        {
-            for(t=0;t<pro[k].n;t++)
-            {
-                for(l=0;l<20;l++)
-                    temp2[l]='\0';
-                for(l=i+1;l<strlen(temp);l++)
-                    temp2[l-i-1]=temp[l];
-                for(l=i;l<20;l++)
-                    temp[l]='\0';
-                for(l=0;l<strlen(pro[k].rhs[t]);l++)
-                    temp[i+l]=pro[k].rhs[t][l];
-                strcat(temp,temp2);
-                if(str[i]==temp[i])
-                    return;
-                else if(str[i]!=temp[i] && temp[i]>=65 && temp[i]<=90)
-                    break;
-            }
-            break;
-        }
-    }
-    if(temp[i]>=65 && temp[i]<=90)
-        findter();
+bool isTERMINAL(char a){
+    if(a>='A' && a<='Z') return true;
+    return false;
 }
 
-int main()
-{
-   FILE *f;
-//    clrscr();
+void FIRST(string key){
 
-    for(i=0;i<10;i++)
-        pro[i].n=0;
+    string val = mp[key];
 
-    f=fopen("in.txt","r");
-    while(!feof(f))
-    {
-        fscanf(f,"%s",pro[n].lhs);
-        if(n>0)
-        {
-            if( strcmp(pro[n].lhs,pro[n-1].lhs) == 0 )
-            {
-                pro[n].lhs[0]='\0';
-                fscanf(f,"%s",pro[n-1].rhs[pro[n-1].n]);
-                pro[n-1].n++;
+    if(isTERMINAL(val[0])){
+        string p = "";
+        p += val[0];
+        FIRST(p);
+    }
+    else{
+        ans += val[0];
+        ans += ",";
+        int flag = 0;
+        for(int i=0;i<val.size();i++){
+            if(val[i]=='|'){
+                flag = 1;
                 continue;
             }
-        }
-        fscanf(f,"%s",pro[n].rhs[pro[n].n]);
-        pro[n].n++;
-        n++;
-    }
-    n--;
-
-    printf("\n\nTHE GRAMMAR IS AS FOLLOWS\n\n");
-    for(i=0;i<n;i++)
-        for(j=0;j<pro[i].n;j++)
-            printf("%s -> %s\n",pro[i].lhs,pro[i].rhs[j]);
-
-    while(1)
-    {
-        for(l=0;l<10;l++)
-            str[0]=NULL;
-
-        printf("\n\nENTER ANY STRING ( 0 for EXIT ) : ");
-        scanf("%s",str);
-        if(str[0]=='0')
-            break;
-
-        for(j=0;j<pro[0].n;j++)
-        {
-            for(l=0;l<20;l++)
-                temp[l]=NULL;
-            strcpy(temp,pro[0].rhs[j]);
-
-            m=0;
-            for(i=0;i<strlen(str);i++)
-            {
-                if(str[i]==temp[i])
-                    m++;
-                else if(str[i]!=temp[i] && temp[i]>=65 && temp[i]<=90)
-                {
-                    findter();
-                    if(str[i]==temp[i])
-                        m++;
-                }
-                else if( str[i]!=temp[i] && (temp[i]<65 || temp[i]>90) )
-                    break;
+            if(flag){
+                ans += val[i];
             }
+        }
 
-            if(m==strlen(str) && strlen(str)==strlen(temp))
-            {
-                printf("\n\nTHE STRING can be PARSED !!!");
+    }
+
+}
+
+void FOLLOW(string key,int z){
+
+    int flag = 0;
+
+    for(int i=0;i<ri.size();i++){
+        if (ri[i].find(key) != string::npos) {
+            if(key.size()==1){
+                for(int j=0;j<ri[i].size();j++){
+                    if(ri[i][j]==key[0]){
+                        if(j+1<ri.size() && ri[i][j+1]!='\''){
+                            flag = 1;
+                            if(isTERMINAL(ri[i][j+1])==false){
+                                if(z==0)ans += "$,";
+                                ans += ri[i][j+1];
+                            }
+                            else{
+                                string g = ri[i];
+                                g.erase(0,1);
+                                FIRST(g);
+                                if(z==0)ans += "$,";
+                                FOLLOW(mpp[ri[i]],1);
+
+                            }
+
+                            break;
+                        }
+                    }
+                }
+            }
+            else{
+                flag = 1;
+
+                for(int j=0;j+1<ri[i].size();j++){
+                    if(ri[i][j]==key[0] && ri[i][j+1]==key[1]){
+                        if(j+2>=ri[i].size()){
+                            FOLLOW(mpp[ri[i]],1);
+                            if(z==0)ans += ",$";
+                        }
+                        else{
+
+                        }
+                    }
+                }
                 break;
             }
         }
-
-        if(j==pro[0].n)
-            printf("\n\nTHE STRING can NOT be PARSED !!!");
+        if(flag) break;
     }
 
-//    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+}
+
+
+
+string remove_space(string s){
+
+    string p="";
+
+    for(int i=0;i<s.size();i++){
+        if(s[i]!=' ') p = p + s[i];
+    }
+
+    return p;
+
+}
+
+
+
+int main(){
+
+    freopen("input.txt","r",stdin);
+    freopen("out.txt","w",stdout);
+
+    string s;
+
+    while(getline(cin,s)){
+        sp.push_back(remove_space(s));
+    }
+
+    for(int i=0;i<sp.size();i++){
+        int flag = 0;
+
+        string key="",val="";
+
+        for(int j=0;j<sp[i].size();j++){
+            if(sp[i][j]=='='){
+                flag = 1;
+                continue;
+            }
+
+            if(flag==0) key += sp[i][j];
+            else val += sp[i][j];
+        }
+
+        mp[key] = val;
+        ke.push_back(key);
+    }
+
+    cerr<<"FIRST: \n\n";
+    cout<<"FIRST: \n\n";
+
+    for(int i=0;i<ke.size();i++){
+        ans = "";
+        FIRST(ke[i]);
+        cerr<<"FIRST("<<ke[i]<<")"<<" = {"<<ans<<"}\n";
+        cout<<"FIRST("<<ke[i]<<")"<<" = {"<<ans<<"}\n";
+    }
+
+    for(int i=0;i<ke.size();i++){
+
+        string val = mp[ke[i]];
+        string v = "";
+
+        for(int j=0;j<val.size();j++){
+            if(val[j]=='|') break;
+            v += val[j];
+        }
+
+        mp[ke[i]] = v;
+        mpp[v] = ke[i];
+        ri.push_back(v);
+    }
+
+    cerr<<"\nFOLLOW: \n\n";
+    cout<<"\nFOLLOW: \n\n";
+
+
+    for(int i=0;i<ke.size();i++){
+        ans = "";
+
+        FOLLOW(ke[i],0);
+        cerr<<"FOLLOW("<<ke[i]<<")"<<" = {"<<ans<<"}\n";
+        cout<<"FOLLOW("<<ke[i]<<")"<<" = {"<<ans<<"}\n";
+    }
+
+
 }
